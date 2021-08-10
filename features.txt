@@ -1,0 +1,54 @@
+    elif type_of_news == "everything":
+        every_news = ["country", "category", "sources", "domains", "source_cache_id"]
+
+        main_query = "SELECT * FROM news_cache WHERE "
+        if params.get("qInTitle") is None:
+            main_query += f"title LIKE '%%' and "
+        else:
+            main_query += f"title LIKE \"%{params.get('qInTitle')}%\" and "
+
+        domains = params.get("domains")
+        if domains is None:
+            main_query += f"domains LIKE '%%' and "
+        else:
+            main_query += f"domains LIKE \"%{domains}%\" and "
+
+        excludeDomains = params.get("excludeDomains")
+        if excludeDomains is None:
+            main_query += f"domains NOT LIKE '%%' and "
+        else:
+            main_query += f"domains NOT LIKE '%{excludeDomains}%' and "
+
+        from_date = params.get("from")
+        to_date = params.get("to")
+        if from_date is not None and to_date is not None:
+            main_query += f"(publishedAt >= '{from_date}' and publishedAt <= '{to_date}') and "
+
+        sort = params.get("sortBy")
+        if sort is None:
+            main_query += "sort is null and "
+        else:
+            main_query += f"sort = '{sort}' and "
+
+        query = "SELECT news_cache_id FROM fetch_details WHERE "
+
+        query += make_query(params, every_news[0])
+        query += make_query(params, every_news[1])
+        query += make_query(params, every_news[2])
+        query += make_query(params, every_news[3])
+        query += make_query(params, every_news[4])
+
+        query += f"type_of_news = '{type_of_news}'"
+
+        cursor.execute(query)
+        inside_query = cursor.fetchall()
+
+        print(main_query + f"({query})")
+
+        cursor.execute(main_query + f"({query})")
+        print(cursor.fetchall())
+
+        for i in range(len(inside_query)):
+
+            single_news = cursor.fetchone()
+            print(single_news)
